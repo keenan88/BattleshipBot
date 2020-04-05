@@ -15,8 +15,8 @@ class EnemySquareState(Enum):
 
 class FriendlySquareState(Enum):
     SHIP = "#"
-    EMPTY = " "
-    UNPLACEABLE = "/"
+    EMPTY = "."
+    UNPLACEABLE = " "
 
 class Square():
     def __init__(self, x, y):
@@ -33,26 +33,95 @@ class Square():
 class Board():
 
     def __init__(self):
-        self.board = []
-
-        for x in range(10):
-            self.board.append([])
-            for y in range(10):
-                self.board[x].append(Square(x, y))
-
+        self.board = self.populateEmptyBoard()
+        self.placeShips()
         self.prettyPrint()
 
-        unplacedShips = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
-        unplacedShips = [4, 3]
+    def populateEmptyBoard(self):
+        board = []
+        for row in range(10):
+            board.append([None]*10)
+            for column in range(10):
+                board[row][column] = Square(column, row)
+        return board
 
-        while(len(unplacedShips) > 0):
-            shipSquares = self.findPlacementSquares(unplacedShips.pop(0))
-            print("ship squares: ", shipSquares)
+    def placeShips(self):
+        unplacedShips = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
+
+        for ship in unplacedShips:
+            shipSquares = self.findPlacementSquares(ship)
             self.placeShip(shipSquares)
             self.BlockAdjacentSqaures(shipSquares)
-            self.prettyPrint()
+
+    def findPlacementSquares(self, shipLength):
+        startingPoint = self.getFirstShipSquare()
+        direction = self.getRandDirection()
+
+        selectedSquares = [startingPoint]
+        selectedSquaresValid = True
+        currentSquare = startingPoint
+        print("ship: ", shipLength)
+        print(currentSquare.x, ",", currentSquare.y)
+        while len(selectedSquares) < shipLength and selectedSquaresValid:
+            try:
+                nextSquare = self.getNextSquare(currentSquare, direction.value)
+
+                selectedSquaresValid = selectedSquaresValid and nextSquare.state == FriendlySquareState.EMPTY
+                selectedSquares.append(nextSquare)
+                currentSquare = nextSquare
+            except Exception as e:
+                print(e)
+                selectedSquares = self.findPlacementSquares(shipLength)
+
+        return selectedSquares
+
+    def getFirstShipSquare(self):
+        startingPoint = self.getSquare(randint(0,9), randint(0, 9))
+
+        while startingPoint.state != FriendlySquareState.EMPTY:
+            startingPoint = self.getSquare(randint(0,9), randint(0, 9))
+
+        return startingPoint
+
+    def getNextSquare(self, startingSquare, direction):
+        nextX = startingSquare.x + direction[0]
+        nextY = startingSquare.y + direction[1]
+        #print("next square:", nextX, ",", nextY)
+
+        if nextX < 0 or nextX > 9:
+            raise ValueError('x coordinate was off the board')
+        if nextY < 0 or nextY > 9:
+            raise ValueError('y coordinate was off the board')
+
+        nextSquare = self.getSquare(nextX, nextY)
+
+        if nextSquare.state != FriendlySquareState.EMPTY:
+            raise ValueError('SQUARE ALREADY TAKEN')
+
+        return nextSquare
+
+    def getSquare(self, x, y):
+        if x < 0 or x > 9:
+            raise ValueError('x coordinate was off the board')
+        if y < 0 or y > 9:
+            raise ValueError('y coordinate was off the board')
+
+        return self.board[y][x]
+
+    def getRandDirection(self):
+        randDirection = randint(0, 3)
+        if randDirection == 0:
+            return ShipDirection.NORTH
+        elif randDirection == 1:
+            return ShipDirection.EAST
+        elif randDirection == 2:
+            return ShipDirection.SOUTH
+        elif randDirection == 3:
+            return ShipDirection.WEST
+
 
     def placeShip(self, shipSquares):
+        print("placing ship:")
         for square in shipSquares:
             square.state = FriendlySquareState.SHIP
 
@@ -67,67 +136,6 @@ class Board():
                     except:
                         pass
 
-
-
-    def getSquare(self, x, y):
-        if x < 0 or x > 9:
-            raise ValueError('x coordinate was off the board')
-        if y < 0 or y > 9:
-            raise ValueError('y coordinate was off the board')
-
-        return self.board[x][y]
-
-    def findPlacementSquares(self, shipLength):
-        startingPoint = self.getSquare(randint(0,9), randint(0, 9))
-
-        while startingPoint.state != FriendlySquareState.EMPTY:
-            startingPoint = self.getSquare(randint(0,9), randint(0, 9))
-
-        direction = self.getRandDirection()
-        print(shipLength)
-        print(direction.value)
-
-        selectedSquares = [startingPoint]
-        selectedSquaresValid = True
-        currentSquare = startingPoint
-        while len(selectedSquares) <= shipLength and selectedSquaresValid:
-            try:
-                nextSquare = self.getNextSquare(currentSquare, direction.value)
-                selectedSquaresValid = selectedSquaresValid and nextSquare.state == FriendlySquareState.EMPTY
-                selectedSquares.append(nextSquare)
-                currentSquare = nextSquare
-            except:
-                print("recurring")
-                selectedSquares = self.findPlacementSquares(shipLength)
-
-        return selectedSquares
-
-    def getNextSquare(self, startingSquare, direction):
-        print("square ", startingSquare.x, ",", startingSquare.y)
-        nextX = startingSquare.x + direction[0]
-        nextY = startingSquare.y + direction[1]
-
-        if nextX < 0 or nextX > 9:
-            raise ValueError('x coordinate was off the board')
-        if nextY < 0 or nextY > 9:
-            raise ValueError('y coordinate was off the board')
-
-        nextSquare = self.board[nextX][nextY]
-
-        return nextSquare
-
-
-
-    def getRandDirection(self):
-        randDirection = randint(0, 3)
-        if randDirection == 0:
-            return ShipDirection.NORTH
-        elif randDirection == 1:
-            return ShipDirection.EAST
-        elif randDirection == 2:
-            return ShipDirection.SOUTH
-        elif randDirection == 3:
-            return ShipDirection.WEST
 
     def prettyPrint(self):
         self.printHorizontalBorder()
