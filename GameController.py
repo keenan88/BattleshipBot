@@ -1,15 +1,18 @@
-from FriendlyBoard import FriendlyBoard
+from Board import Board
 from EnemyBoard import EnemyBoard
 from Player import Player
 
-p1Board = FriendlyBoard()
-p2Board = FriendlyBoard()
+print("p1 board:")
+p1Board = Board()
+print("p2 board:")
+p2Board = Board()
 
-p1 = Player(p1Board, p2Board)
-p2 = Player(p2Board, p1Board)
+p1 = Player(p1Board, EnemyBoard(p2Board))
+p2 = Player(p2Board, EnemyBoard(p1Board))
 
 players = [p1, p2]
 
 while not (p1.victorious or p2.victorious):
     for player in players:
-        player.shoot()
+        p1.victorious = True
+        #player.shoot()

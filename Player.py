@@ -1,5 +1,5 @@
 from random import randint
-from FriendlyBoard import Square
+from Board import Square
 
 class Player():
 
