@@ -15,8 +15,8 @@ class EnemySquareState(Enum):
 
 class FriendlySquareState(Enum):
     SHIP = "#"
-    EMPTY = "."
-    UNPLACEABLE = " "
+    EMPTY = " "
+    UNPLACEABLE = ", "
 
 class Square():
     def __init__(self, x, y):
@@ -35,6 +35,7 @@ class Board():
     def __init__(self):
         self.board = self.populateEmptyBoard()
         self.placeShips()
+        self.eraseUnplaceableSquares()
         self.prettyPrint()
 
     def populateEmptyBoard(self):
@@ -60,8 +61,6 @@ class Board():
         selectedSquares = [startingPoint]
         selectedSquaresValid = True
         currentSquare = startingPoint
-        print("ship: ", shipLength)
-        print(currentSquare.x, ",", currentSquare.y)
         while len(selectedSquares) < shipLength and selectedSquaresValid:
             try:
                 nextSquare = self.getNextSquare(currentSquare, direction.value)
@@ -70,7 +69,6 @@ class Board():
                 selectedSquares.append(nextSquare)
                 currentSquare = nextSquare
             except Exception as e:
-                print(e)
                 selectedSquares = self.findPlacementSquares(shipLength)
 
         return selectedSquares
@@ -86,7 +84,6 @@ class Board():
     def getNextSquare(self, startingSquare, direction):
         nextX = startingSquare.x + direction[0]
         nextY = startingSquare.y + direction[1]
-        #print("next square:", nextX, ",", nextY)
 
         if nextX < 0 or nextX > 9:
             raise ValueError('x coordinate was off the board')
@@ -121,7 +118,6 @@ class Board():
 
 
     def placeShip(self, shipSquares):
-        print("placing ship:")
         for square in shipSquares:
             square.state = FriendlySquareState.SHIP
 
@@ -135,6 +131,11 @@ class Board():
                             adjacentSqaure.state = FriendlySquareState.UNPLACEABLE
                     except:
                         pass
+
+    def eraseUnplaceableSquares(self):
+        for row in self.board:
+            for square in row:
+                square.state = FriendlySquareState.EMPTY if square.state == FriendlySquareState.UNPLACEABLE else square.state
 
 
     def prettyPrint(self):
